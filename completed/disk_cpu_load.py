@@ -2,15 +2,20 @@ import subprocess
 import sys
 
 # Script to test cpu load imposed by a simple disk read operation
-# using subprocess to run the commands implemented in disk_spu_load.sh In a class DiskCPULoadTester
+# using subprocess to run the commands implemented in disk_spu_load.sh In
+# a class DiskCPULoadTester
 #
+# Authors
+#   Jeter Gutierrez <jetergdev@gmail.com>
+
 # Usage:
 #   python disk_cpu_load.py [ --max-load <load> ] [ --xfer <mebibytes> ]
 #                    [ --verbose ] [ <device_filename> ]
 #
 # Parameters:
 #  --max-load <load> -- Max CPU load percentage (default 30).
-#  --xfer <mebibytes> -- Amount of data to read from disk, in MiB (default 4096).
+#  --xfer <mebibytes> -- Amount of data to read from disk, in MiB (default
+#                        4096).
 #  --verbose -- Flag for verbose output (default False).
 #  <device-filename> -- This is the WHOLE-DISK device filename (with or
 #                       without "/dev/"), e.g. "sda" or "/dev/sda". The
@@ -18,11 +23,13 @@ import sys
 #                       it if necessary, and runs the tests on that mounted
 #                       filesystem. Defaults to /dev/sda.
 
+
 class DiskCPULoadTester:
     """
     A class to test CPU load imposed by a simple disk read operation.
     """
-    def __init__(self, max_load=30, xfer=4096, verbose=False, device_filename='/dev/sda'):
+    def __init__(self, max_load=30, xfer=4096, verbose=False,
+                 device_filename='/dev/sda'):
         self.max_load = max_load
         self.xfer = xfer
         self.verbose = verbose
@@ -33,11 +40,12 @@ class DiskCPULoadTester:
         Computes the CPU load between two points in time.
 
         Args:
-            start_use (list[int]): CPU statistics from /proc/stat at the START point.
-            end_use (list[int]): CPU statistics from /proc/stat at the END point.
+            start_use (list[int]): CPU statistics from /proc/stat at the START.
+            end_use (list[int]): CPU statistics from /proc/stat at the END.
 
         Returns:
-            int: The CPU load over the two measurements, as a percentage (0-100).
+            int: The CPU load over the two measurements, as a percentage
+            (0-100).
         """
         diff_idle = end_use[3] - start_use[3]
         diff_total = sum(end_use) - sum(start_use)
@@ -58,10 +66,13 @@ class DiskCPULoadTester:
         Retrieves the current CPU statistics from /proc/stat.
 
         Returns:
-            list[int]: A list of integers representing the CPU usage statistics.
+            list[int]: A list of integers representing the CPU usage
+            statistics.
         """
         # Convert /proc/stat byte data to list of ints 
-        cpu_stats = subprocess.check_output("grep 'cpu ' /proc/stat | tr -s ' ' | cut -d ' ' -f 2-", shell=True).decode().split()
+        cpu_stats = subprocess.check_output(
+            "grep 'cpu ' /proc/stat | tr -s ' ' | cut -d ' ' -f 2-", shell=True
+        ).decode().split()
         return [int(x) for x in cpu_stats]
 
     def flush_buffers(self):
@@ -69,7 +80,8 @@ class DiskCPULoadTester:
         Flushes the buffers of the specified disk device.
         """
         try:
-            subprocess.run(['blockdev', '--flushbufs', self.device_filename], check=True)
+            subprocess.run(['blockdev', '--flushbufs', self.device_filename],
+                           check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error flushing buffers: {e}", file=sys.stderr)
             sys.exit(1)
@@ -79,8 +91,11 @@ class DiskCPULoadTester:
         Performs the disk read operation.
         """
         try:
-            subprocess.run(['dd', f'if={self.device_filename}', 'of=/dev/null', 'bs=1048576', f'count={self.xfer}'],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            subprocess.run(
+                ['dd', f'if={self.device_filename}', 'of=/dev/null',
+                    'bs=1048576', f'count={self.xfer}'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error reading from disk: {e}", file=sys.stderr)
             sys.exit(1)
@@ -89,7 +104,9 @@ class DiskCPULoadTester:
         """
         Runs the disk CPU load test and prints the results.
         """
-        print(f"Testing CPU load when reading {self.xfer} MiB from {self.device_filename}")
+        print(
+            "Testing CPU load when reading", self.xfer, "MiB from",
+            self.device_filename)
         print(f"Maximum acceptable CPU load is {self.max_load}")
 
         self.flush_buffers()
